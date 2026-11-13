@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gridiron Dynasty — 2020 Season & Longevity Simulation</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f141c;--p:#18202b;--ink:#e8edf5;--mu:#98a3b3;--ln:#2b3644;--hd:#1d3f7a;--lk:#8ab4ff;--ac:#f0b429;--up:#5fd28a;--dn:#ff8a7a;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#eceff3;--p:#fff;--ink:#16191f;--mu:#5d6673;--ln:#d5d9e0;--hd:#12264a;--lk:#1d4ed8;--ac:#f0b429;--up:#1b7a3d;--dn:#c0392b}}
+:root[data-theme="light"]{--bg:#eceff3;--p:#fff;--ink:#16191f;--mu:#5d6673;--ln:#d5d9e0;--hd:#12264a;--lk:#1d4ed8;--ac:#f0b429;--up:#1b7a3d;--dn:#c0392b}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Source Sans 3",system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:980px;margin:0 auto;padding:16px}
+header{background:var(--hd);color:#fff;border-radius:12px;padding:20px;display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between;box-shadow:0 4px 12px rgba(0,0,0,0.2)}
+.header-top{display:flex;justify-content:space-between;align-items:center;width:100%}
+h1{margin:0;font:700 34px/1 Oswald,Impact,sans-serif;letter-spacing:0.5px}
+.theme-btn{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;padding:6px 12px;border-radius:8px;font-weight:600;cursor:pointer;font-size:13px}
+.theme-btn:hover{background:rgba(255,255,255,0.25)}
+.st{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;opacity:.95}.st b{display:block;font-size:18px}
+nav{display:flex;gap:4px;margin:16px 0;border-bottom:2px solid var(--ln);overflow-x:auto}
+nav button{background:none;border:0;padding:10px 14px;font:inherit;font-weight:600;color:var(--mu);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap}
+nav button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--ac)}
+section{background:var(--p);border:1px solid var(--ln);border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.05)}
+.scroll{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:520px}
+th,td{padding:9px 8px;text-align:left;border-bottom:1px solid var(--ln);white-space:nowrap}th{font-size:12px;color:var(--mu);text-transform:uppercase;letter-spacing:0.5px}
+.btn{background:var(--hd);color:#fff;border:0;border-radius:8px;padding:9px 14px;font:inherit;font-weight:600;cursor:pointer;margin:0 6px 8px 0;transition:transform 0.1s}
+.btn:active{transform:scale(0.98)}
+.btn.alt{background:transparent;color:var(--ink);border:1px solid var(--ln)}.btn.go{background:var(--ac);color:#1a1300;padding:12px 20px;font-weight:700}
+.lnk{background:none;border:0;padding:0;font:inherit;color:var(--lk);text-decoration:underline;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--ac);outline-offset:2px}
+input,select{font:inherit;padding:10px;border:1px solid var(--ln);border-radius:8px;background:var(--bg);color:var(--ink)}
+.mu{color:var(--mu);margin:0 0 12px}.up{color:var(--up);font-weight:600}.dn{color:var(--dn);font-weight:600}
+.empty{color:var(--mu);padding:24px 0;text-align:center}h3{margin:14px 0 8px;font:700 20px Oswald,sans-serif}
+ul{list-style:none;margin:0;padding:0}li{padding:6px 0;border-bottom:1px solid var(--ln)}
+.badge{display:inline-block;font-size:10px;background:var(--ac);color:#1a1300;padding:2px 7px;border-radius:10px;margin-left:6px;font-weight:700;vertical-align:middle}
+.action-bar{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-top:16px;align-items:center}
+</style>
+</head>
+<body>
+<main>
+<header>
+ <div class="header-top">
+   <div><h1>Gridiron Dynasty (2020 Era)</h1><div style="opacity:.9;font-size:14px">2020 Week 1 realistic rosters · slower regression · retirements at 38+</div></div>
+   <button class="theme-btn" id="themeToggle">🌓 Theme</button>
+ </div>
+ <div class="st"><div>Season<b id="a"></b></div><div>Players<b id="b"></b></div><div>Last champion<b id="c"></b></div><div>Hall of Fame<b id="d"></b></div></div>
+</header>
+<nav id="nav"></nav>
+<section id="view"></section>
+<div class="action-bar">
+  <button class="btn go" data-a="play" id="play"></button>
+  <button class="btn alt" id="reset">Reset league</button>
+</div>
+</main>
+<script>
+(function(){
+var ROSTER_2020 = [
+  // Kansas City Chiefs
+  {"iden":"2020-kc-01","forename":"Patrick","surname":"Mahomes","age":24,"position":"QB","teamID":"KC","rating":99,"potential":99},
+  {"iden":"2020-kc-02","forename":"Travis","surname":"Kelce","age":30,"position":"TE","teamID":"KC","rating":97,"potential":97},
+  {"iden":"2020-kc-03","forename":"Tyreek","surname":"Hill","age":26,"position":"WR","teamID":"KC","rating":96,"potential":97},
+  {"iden":"2020-kc-04","forename":"Clyde","surname":"Edwards-Helaire","age":21,"position":"RB","teamID":"KC","rating":82,"potential":90},
+  {"iden":"2020-kc-05","forename":"Chris","surname":"Jones","age":26,"position":"DL","teamID":"KC","rating":92,"potential":95},
+  {"iden":"2020-kc-06","forename":"Frank","surname":"Clark","age":27,"position":"DL","teamID":"KC","rating":88,"potential":90},
+  {"iden":"2020-kc-07","forename":"Tyrann","surname":"Mathieu","age":28,"position":"S","teamID":"KC","rating":90,"potential":91},
+  {"iden":"2020-kc-08","forename":"Mitchell","surname":"Schwartz","age":31,"position":"OL","teamID":"KC","rating":96,"potential":96},
+  {"iden":"2020-kc-09","forename":"Sammy","surname":"Watkins","age":27,"position":"WR","teamID":"KC","rating":84,"potential":85},
+  {"iden":"2020-kc-10","forename":"Mecole","surname":"Hardman","age":22,"position":"WR","teamID":"KC","rating":80,"potential":88},
+  // Los Angeles Rams
+  {"iden":"2020-lar-01","forename":"Aaron","surname":"Donald","age":29,"position":"DL","teamID":"LAR","rating":99,"potential":99},
+  {"iden":"2020-lar-02","forename":"Jalen","surname":"Ramsey","age":25,"position":"CB","teamID":"LAR","rating":94,"potential":97},
+  {"iden":"2020-lar-03","forename":"Cooper","surname":"Kupp","age":27,"position":"WR","teamID":"LAR","rating":88,"potential":92},
+  {"iden":"2020-lar-04","forename":"Robert","surname":"Woods","age":28,"position":"WR","teamID":"LAR","rating":86,"potential":87},
+  {"iden":"2020-lar-05","forename":"Jared","surname":"Goff","age":25,"position":"QB","teamID":"LAR","rating":82,"potential":86},
+  {"iden":"2020-lar-06","forename":"Cam","surname":"Akers","age":21,"position":"RB","teamID":"LAR","rating":78,"potential":88},
+  {"iden":"2020-lar-07","forename":"Johnny","surname":"Hekker","age":30,"position":"P","teamID":"LAR","rating":92,"potential":92},
+  {"iden":"2020-lar-08","forename":"Andrew","surname":"Whitworth","age":38,"position":"OL","teamID":"LAR","rating":86,"potential":86},
+  {"iden":"2020-lar-09","forename":"Tyler","surname":"Higbee","age":27,"position":"TE","teamID":"LAR","rating":82,"potential":85},
+  // Carolina Panthers
+  {"iden":"2020-car-01","forename":"Christian","surname":"McCaffrey","age":24,"position":"RB","teamID":"CAR","rating":99,"potential":99},
+  {"iden":"2020-car-02","forename":"Teddy","surname":"Bridgewater","age":27,"position":"QB","teamID":"CAR","rating":78,"potential":82},
+  {"iden":"2020-car-03","forename":"DJ","surname":"Moore","age":23,"position":"WR","teamID":"CAR","rating":86,"potential":92},
+  {"iden":"2020-car-04","forename":"Robby","surname":"Anderson","age":27,"position":"WR","teamID":"CAR","rating":83,"potential":85},
+  {"iden":"2020-car-05","forename":"Brian","surname":"Burns","age":22,"position":"DL","teamID":"CAR","rating":84,"potential":92},
+  {"iden":"2020-car-06","forename":"Shaq","surname":"Thompson","age":26,"position":"LB","teamID":"CAR","rating":84,"potential":87},
+  // New England Patriots
+  {"iden":"2020-ne-01","forename":"Stephon","surname":"Gilmore","age":29,"position":"CB","teamID":"NE","rating":99,"potential":99},
+  {"iden":"2020-ne-02","forename":"Cam","surname":"Newton","age":31,"position":"QB","teamID":"NE","rating":80,"potential":82},
+  {"iden":"2020-ne-03","forename":"Julian","surname":"Edelman","age":34,"position":"WR","teamID":"NE","rating":86,"potential":86},
+  {"iden":"2020-ne-04","forename":"Dont'a","surname":"Hightower","age":30,"position":"LB","teamID":"NE","rating":88,"potential":88},
+  {"iden":"2020-ne-05","forename":"Devin","surname":"McCourty","age":33,"position":"S","teamID":"NE","rating":92,"potential":92},
+  {"iden":"2020-ne-06","forename":"Sony","surname":"Michel","age":25,"position":"RB","teamID":"NE","rating":80,"potential":84},
+  {"iden":"2020-ne-07","forename":"Joe","surname":"Thuney","age":27,"position":"OL","teamID":"NE","rating":85,"potential":88},
+  // New Orleans Saints
+  {"iden":"2020-no-01","forename":"Michael","surname":"Thomas","age":27,"position":"WR","teamID":"NO","rating":99,"potential":99},
+  {"iden":"2020-no-02","forename":"Drew","surname":"Brees","age":41,"position":"QB","teamID":"NO","rating":93,"potential":93},
+  {"iden":"2020-no-03","forename":"Alvin","surname":"Kamara","age":25,"position":"RB","teamID":"NO","rating":91,"potential":94},
+  {"iden":"2020-no-04","forename":"Cameron","surname":"Jordan","age":31,"position":"DL","teamID":"NO","rating":96,"potential":96},
+  {"iden":"2020-no-05","forename":"Marshon","surname":"Lattimore","age":24,"position":"CB","teamID":"NO","rating":90,"potential":94},
+  {"iden":"2020-no-06","forename":"Terron","surname":"Armstead","age":29,"position":"OL","teamID":"NO","rating":95,"potential":95},
+  {"iden":"2020-no-07","forename":"Jared","surname":"Cook","age":33,"position":"TE","teamID":"NO","rating":86,"potential":86},
+  {"iden":"2020-no-08","forename":"Demario","surname":"Davis","age":31,"position":"LB","teamID":"NO","rating":90,"potential":90},
+  // Seattle Seahawks
+  {"iden":"2020-sea-01","forename":"Russell","surname":"Wilson","age":31,"position":"QB","teamID":"SEA","rating":97,"potential":97},
+  {"iden":"2020-sea-02","forename":"Bobby","surname":"Wagner","age":30,"position":"LB","teamID":"SEA","rating":98,"potential":98},
+  {"iden":"2020-sea-03","forename":"DK","surname":"Metcalf","age":22,"position":"WR","teamID":"SEA","rating":88,"potential":95},
+  {"iden":"2020-sea-04","forename":"Tyler","surname":"Lockett","age":27,"position":"WR","teamID":"SEA","rating":90,"potential":91},
+  {"iden":"2020-sea-05","forename":"Chris","surname":"Carson","age":25,"position":"RB","teamID":"SEA","rating":86,"potential":88},
+  {"iden":"2020-sea-06","forename":"Jamal","surname":"Adams","age":24,"position":"S","teamID":"SEA","rating":92,"potential":95},
+  {"iden":"2020-sea-07","forename":"Duane","surname":"Brown","age":35,"position":"OL","teamID":"SEA","rating":88,"potential":88},
+  // San Francisco 49ers
+  {"iden":"2020-sf-01","forename":"George","surname":"Kittle","age":26,"position":"TE","teamID":"SF","rating":98,"potential":99},
+  {"iden":"2020-sf-02","forename":"Nick","surname":"Bosa","age":22,"position":"DL","teamID":"SF","rating":91,"potential":97},
+  {"iden":"2020-sf-03","forename":"Jimmy","surname":"Garoppolo","age":28,"position":"QB","teamID":"SF","rating":80,"potential":84},
+  {"iden":"2020-sf-04","forename":"Deebo","surname":"Samuel","age":24,"position":"WR","teamID":"SF","rating":86,"potential":93},
+  {"iden":"2020-sf-05","forename":"Raheem","surname":"Mostert","age":28,"position":"RB","teamID":"SF","rating":84,"potential":86},
+  {"iden":"2020-sf-06","forename":"Fred","surname":"Warner","age":23,"position":"LB","teamID":"SF","rating":90,"potential":95},
+  {"iden":"2020-sf-07","forename":"Trent","surname":"Williams","age":32,"position":"OL","teamID":"SF","rating":95,"potential":95},
+  {"iden":"2020-sf-08","forename":"Richard","surname":"Sherman","age":32,"position":"CB","teamID":"SF","rating":88,"potential":88},
+  // Arizona Cardinals
+  {"iden":"2020-ari-01","forename":"DeAndre","surname":"Hopkins","age":28,"position":"WR","teamID":"ARI","rating":98,"potential":98},
+  {"iden":"2020-ari-02","forename":"Kyler","surname":"Murray","age":23,"position":"QB","teamID":"ARI","rating":88,"potential":95},
+  {"iden":"2020-ari-03","forename":"Chandler","surname":"Jones","age":30,"position":"LB","teamID":"ARI","rating":95,"potential":95},
+  {"iden":"2020-ari-04","forename":"Kenyan","surname":"Drake","age":26,"position":"RB","teamID":"ARI","rating":84,"potential":86},
+  {"iden":"2020-ari-05","forename":"Budda","surname":"Baker","age":24,"position":"S","teamID":"ARI","rating":92,"potential":95},
+  {"iden":"2020-ari-06","forename":"Christian","surname":"Kirk","age":23,"position":"WR","teamID":"ARI","rating":82,"potential":88},
+  // Atlanta Falcons
+  {"iden":"2020-atl-01","forename":"Julio","surname":"Jones","age":31,"position":"WR","teamID":"ATL","rating":97,"potential":97},
+  {"iden":"2020-atl-02","forename":"Matt","surname":"Ryan","age":35,"position":"QB","teamID":"ATL","rating":87,"potential":87},
+  {"iden":"2020-atl-03","forename":"Calvin","surname":"Ridley","age":25,"position":"WR","teamID":"ATL","rating":88,"potential":92},
+  {"iden":"2020-atl-04","forename":"Todd","surname":"Gurley","age":26,"position":"RB","teamID":"ATL","rating":84,"potential":85},
+  {"iden":"2020-atl-05","forename":"Grady","surname":"Jarrett","age":27,"position":"DL","teamID":"ATL","rating":90,"potential":92},
+  {"iden":"2020-atl-06","forename":"Jake","surname":"Matthews","age":28,"position":"OL","teamID":"ATL","rating":86,"potential":88},
+  // Chicago Bears
+  {"iden":"2020-chi-01","forename":"Khalil","surname":"Mack","age":29,"position":"LB","teamID":"CHI","rating":97,"potential":97},
+  {"iden":"2020-chi-02","forename":"Allen","surname":"Robinson","age":27,"position":"WR","teamID":"CHI","rating":89,"potential":90},
+  {"iden":"2020-chi-03","forename":"Eddie","surname":"Jackson","age":26,"position":"S","teamID":"CHI","rating":89,"potential":91},
+  {"iden":"2020-chi-04","forename":"Akiem","surname":"Hicks","age":30,"position":"DL","teamID":"CHI","rating":88,"potential":88},
+  {"iden":"2020-chi-05","forename":"David","surname":"Montgomery","age":23,"position":"RB","teamID":"CHI","rating":82,"potential":88},
+  {"iden":"2020-chi-06","forename":"Roquan","surname":"Smith","age":23,"position":"LB","teamID":"CHI","rating":86,"potential":93},
+  {"iden":"2020-chi-07","forename":"Mitchell","surname":"Trubisky","age":26,"position":"QB","teamID":"CHI","rating":74,"potential":80},
+  // Baltimore Ravens
+  {"iden":"2020-bal-01","forename":"Lamar","surname":"Jackson","age":23,"position":"QB","teamID":"BAL","rating":94,"potential":98},
+  {"iden":"2020-bal-02","forename":"Justin","surname":"Tucker","age":30,"position":"K","teamID":"BAL","rating":97,"potential":98},
+  {"iden":"2020-bal-03","forename":"Mark","surname":"Andrews","age":25,"position":"TE","teamID":"BAL","rating":88,"potential":93},
+  {"iden":"2020-bal-04","forename":"Marlon","surname":"Humphrey","age":24,"position":"CB","teamID":"BAL","rating":90,"potential":95},
+  {"iden":"2020-bal-05","forename":"Ronnie","surname":"Stanley","age":26,"position":"OL","teamID":"BAL","rating":93,"potential":95},
+  {"iden":"2020-bal-06","forename":"Calais","surname":"Campbell","age":34,"position":"DL","teamID":"BAL","rating":95,"potential":95},
+  {"iden":"2020-bal-07","forename":"Mark","surname":"Ingram","age":30,"position":"RB","teamID":"BAL","rating":86,"potential":86},
+  {"iden":"2020-bal-08","forename":"Marquise","surname":"Brown","age":23,"position":"WR","teamID":"BAL","rating":82,"potential":90},
+  {"iden":"2020-bal-09","forename":"Patrick","surname":"Queen","age":21,"position":"LB","teamID":"BAL","rating":78,"potential":90},
+  // Tennessee Titans
+  {"iden":"2020-ten-01","forename":"Derrick","surname":"Henry","age":26,"position":"RB","teamID":"TEN","rating":93,"potential":96},
+  {"iden":"2020-ten-02","forename":"Ryan","surname":"Tannehill","age":32,"position":"QB","teamID":"TEN","rating":84,"potential":86},
+  {"iden":"2020-ten-03","forename":"A.J.","surname":"Brown","age":23,"position":"WR","teamID":"TEN","rating":86,"potential":93},
+  {"iden":"2020-ten-04","forename":"Kevin","surname":"Byard","age":27,"position":"S","teamID":"TEN","rating":91,"potential":92},
+  {"iden":"2020-ten-05","forename":"Harold","surname":"Landry","age":24,"position":"LB","teamID":"TEN","rating":84,"potential":90},
+  {"iden":"2020-ten-06","forename":"Jeffery","surname":"Simmons","age":23,"position":"DL","teamID":"TEN","rating":82,"potential":92},
+  // Tampa Bay Buccaneers
+  {"iden":"2020-tb-01","forename":"Tom","surname":"Brady","age":43,"position":"QB","teamID":"TB","rating":90,"potential":90},
+  {"iden":"2020-tb-02","forename":"Mike","surname":"Evans","age":27,"position":"WR","teamID":"TB","rating":90,"potential":91},
+  {"iden":"2020-tb-03","forename":"Chris","surname":"Godwin","age":24,"position":"WR","teamID":"TB","rating":90,"potential":94},
+  {"iden":"2020-tb-04","forename":"Rob","surname":"Gronkowski","age":31,"position":"TE","teamID":"TB","rating":92,"potential":92},
+  {"iden":"2020-tb-05","forename":"Shaquil","surname":"Barrett","age":27,"position":"LB","teamID":"TB","rating":90,"potential":91},
+  {"iden":"2020-tb-06","forename":"Lavonte","surname":"David","age":30,"position":"LB","teamID":"TB","rating":90,"potential":90},
+  {"iden":"2020-tb-07","forename":"Ronald","surname":"Jones","age":23,"position":"RB","teamID":"TB","rating":82,"potential":86},
+  {"iden":"2020-tb-08","forename":"Jason","surname":"Pierre-Paul","age":31,"position":"DL","teamID":"TB","rating":86,"potential":86},
+  // Dallas Cowboys
+  {"iden":"2020-dal-01","forename":"Zack","surname":"Martin","age":29,"position":"OL","teamID":"DAL","rating":98,"potential":98},
+  {"iden":"2020-dal-02","forename":"Dak","surname":"Prescott","age":27,"position":"QB","teamID":"DAL","rating":86,"potential":90},
+  {"iden":"2020-dal-03","forename":"Ezekiel","surname":"Elliott","age":25,"position":"RB","teamID":"DAL","rating":92,"potential":93},
+  {"iden":"2020-dal-04","forename":"Amari","surname":"Cooper","age":26,"position":"WR","teamID":"DAL","rating":91,"potential":92},
+  {"iden":"2020-dal-05","forename":"CeeDee","surname":"Lamb","age":21,"position":"WR","teamID":"DAL","rating":80,"potential":92},
+  {"iden":"2020-dal-06","forename":"Tyron","surname":"Smith","age":29,"position":"OL","teamID":"DAL","rating":94,"potential":94},
+  {"iden":"2020-dal-07","forename":"Michael","surname":"Gallup","age":24,"position":"WR","teamID":"DAL","rating":84,"potential":88},
+  {"iden":"2020-dal-08","forename":"Jaylon","surname":"Smith","age":25,"position":"LB","teamID":"DAL","rating":84,"potential":87},
+  // Indianapolis Colts
+  {"iden":"2020-ind-01","forename":"Quenton","surname":"Nelson","age":24,"position":"OL","teamID":"IND","rating":96,"potential":99},
+  {"iden":"2020-ind-02","forename":"Philip","surname":"Rivers","age":38,"position":"QB","teamID":"IND","rating":82,"potential":82},
+  {"iden":"2020-ind-03","forename":"Jonathan","surname":"Taylor","age":21,"position":"RB","teamID":"IND","rating":80,"potential":92},
+  {"iden":"2020-ind-04","forename":"Darius","surname":"Leonard","age":25,"position":"LB","teamID":"IND","rating":92,"potential":95},
+  {"iden":"2020-ind-05","forename":"T.Y.","surname":"Hilton","age":30,"position":"WR","teamID":"IND","rating":86,"potential":86},
+  {"iden":"2020-ind-06","forename":"DeForest","surname":"Buckner","age":26,"position":"DL","teamID":"IND","rating":90,"potential":93},
+  {"iden":"2020-ind-07","forename":"Ryan","surname":"Kelly","age":27,"position":"OL","teamID":"IND","rating":86,"potential":88},
+  // Green Bay Packers
+  {"iden":"2020-gb-01","forename":"David","surname":"Bakhtiari","age":28,"position":"OL","teamID":"GB","rating":96,"potential":96},
+  {"iden":"2020-gb-02","forename":"Aaron","surname":"Rodgers","age":36,"position":"QB","teamID":"GB","rating":92,"potential":92},
+  {"iden":"2020-gb-03","forename":"Davante","surname":"Adams","age":27,"position":"WR","teamID":"GB","rating":94,"potential":95},
+  {"iden":"2020-gb-04","forename":"Aaron","surname":"Jones","age":25,"position":"RB","teamID":"GB","rating":90,"potential":92},
+  {"iden":"2020-gb-05","forename":"Jaire","surname":"Alexander","age":23,"position":"CB","teamID":"GB","rating":90,"potential":95},
+  {"iden":"2020-gb-06","forename":"Kenny","surname":"Clark","age":24,"position":"DL","teamID":"GB","rating":90,"potential":93},
+  {"iden":"2020-gb-07","forename":"Za'Darius","surname":"Smith","age":27,"position":"LB","teamID":"GB","rating":88,"potential":90},
+  {"iden":"2020-gb-08","forename":"Robert","surname":"Tonyan","age":26,"position":"TE","teamID":"GB","rating":80,"potential":84},
+  // Cleveland Browns
+  {"iden":"2020-cle-01","forename":"Myles","surname":"Garrett","age":24,"position":"DL","teamID":"CLE","rating":93,"potential":98},
+  {"iden":"2020-cle-02","forename":"Nick","surname":"Chubb","age":24,"position":"RB","teamID":"CLE","rating":92,"potential":95},
+  {"iden":"2020-cle-03","forename":"Baker","surname":"Mayfield","age":25,"position":"QB","teamID":"CLE","rating":80,"potential":86},
+  {"iden":"2020-cle-04","forename":"Odell","surname":"Beckham","age":27,"position":"WR","teamID":"CLE","rating":88,"potential":89},
+  {"iden":"2020-cle-05","forename":"Jarvis","surname":"Landry","age":27,"position":"WR","teamID":"CLE","rating":86,"potential":86},
+  {"iden":"2020-cle-06","forename":"Joel","surname":"Bitonio","age":28,"position":"OL","teamID":"CLE","rating":90,"potential":91},
+  {"iden":"2020-cle-07","forename":"Denzel","surname":"Ward","age":23,"position":"CB","teamID":"CLE","rating":86,"potential":92},
+  {"iden":"2020-cle-08","forename":"Kareem","surname":"Hunt","age":25,"position":"RB","teamID":"CLE","rating":84,"potential":86},
+  // Buffalo Bills
+  {"iden":"2020-buf-01","forename":"Josh","surname":"Allen","age":24,"position":"QB","teamID":"BUF","rating":86,"potential":94},
+  {"iden":"2020-buf-02","forename":"Stefon","surname":"Diggs","age":26,"position":"WR","teamID":"BUF","rating":92,"potential":94},
+  {"iden":"2020-buf-03","forename":"Tre'Davious","surname":"White","age":25,"position":"CB","teamID":"BUF","rating":92,"potential":94},
+  {"iden":"2020-buf-04","forename":"Devin","surname":"Singletary","age":23,"position":"RB","teamID":"BUF","rating":82,"potential":88},
+  {"iden":"2020-buf-05","forename":"Ed","surname":"Oliver","age":22,"position":"DL","teamID":"BUF","rating":84,"potential":92},
+  {"iden":"2020-buf-06","forename":"Tremaine","surname":"Edmunds","age":22,"position":"LB","teamID":"BUF","rating":84,"potential":92},
+  {"iden":"2020-buf-07","forename":"Cole","surname":"Beasley","age":31,"position":"WR","teamID":"BUF","rating":84,"potential":84},
+  // Minnesota Vikings
+  {"iden":"2020-min-01","forename":"Dalvin","surname":"Cook","age":25,"position":"RB","teamID":"MIN","rating":91,"potential":94},
+  {"iden":"2020-min-02","forename":"Kirk","surname":"Cousins","age":32,"position":"QB","teamID":"MIN","rating":82,"potential":84},
+  {"iden":"2020-min-03","forename":"Adam","surname":"Thielen","age":30,"position":"WR","teamID":"MIN","rating":90,"potential":90},
+  {"iden":"2020-min-04","forename":"Justin","surname":"Jefferson","age":21,"position":"WR","teamID":"MIN","rating":80,"potential":94},
+  {"iden":"2020-min-05","forename":"Harrison","surname":"Smith","age":31,"position":"S","teamID":"MIN","rating":95,"potential":95},
+  {"iden":"2020-min-06","forename":"Danielle","surname":"Hunter","age":25,"position":"DL","teamID":"MIN","rating":92,"potential":94},
+  {"iden":"2020-min-07","forename":"Eric","surname":"Kendricks","age":28,"position":"LB","teamID":"MIN","rating":90,"potential":91},
+  // Pittsburgh Steelers
+  {"iden":"2020-pit-01","forename":"T.J.","surname":"Watt","age":25,"position":"LB","teamID":"PIT","rating":94,"potential":97},
+  {"iden":"2020-pit-02","forename":"Minkah","surname":"Fitzpatrick","age":23,"position":"S","teamID":"PIT","rating":92,"potential":96},
+  {"iden":"2020-pit-03","forename":"Cameron","surname":"Heyward","age":31,"position":"DL","teamID":"PIT","rating":94,"potential":94},
+  {"iden":"2020-pit-04","forename":"Ben","surname":"Roethlisberger","age":38,"position":"QB","teamID":"PIT","rating":84,"potential":84},
+  {"iden":"2020-pit-05","forename":"JuJu","surname":"Smith-Schuster","age":23,"position":"WR","teamID":"PIT","rating":86,"potential":90},
+  {"iden":"2020-pit-06","forename":"James","surname":"Conner","age":25,"position":"RB","teamID":"PIT","rating":82,"potential":85},
+  {"iden":"2020-pit-07","forename":"Maurkice","surname":"Pouncey","age":31,"position":"OL","teamID":"PIT","rating":90,"potential":90},
+  // Philadelphia Eagles
+  {"iden":"2020-phi-01","forename":"Fletcher","surname":"Cox","age":29,"position":"DL","teamID":"PHI","rating":96,"potential":96},
+  {"iden":"2020-phi-02","forename":"Carson","surname":"Wentz","age":27,"position":"QB","teamID":"PHI","rating":84,"potential":88},
+  {"iden":"2020-phi-03","forename":"Zach","surname":"Ertz","age":29,"position":"TE","teamID":"PHI","rating":88,"potential":88},
+  {"iden":"2020-phi-04","forename":"Dallas","surname":"Goedert","age":25,"position":"TE","teamID":"PHI","rating":84,"potential":90},
+  {"iden":"2020-phi-05","forename":"Miles","surname":"Sanders","age":23,"position":"RB","teamID":"PHI","rating":84,"potential":90},
+  {"iden":"2020-phi-06","forename":"Jason","surname":"Kelce","age":32,"position":"OL","teamID":"PHI","rating":94,"potential":94},
+  {"iden":"2020-phi-07","forename":"Darius","surname":"Slay","age":29,"position":"CB","teamID":"PHI","rating":90,"potential":90},
+  // Houston Texans
+  {"iden":"2020-hou-01","forename":"Deshaun","surname":"Watson","age":24,"position":"QB","teamID":"HOU","rating":88,"potential":94},
+  {"iden":"2020-hou-02","forename":"J.J.","surname":"Watt","age":31,"position":"DL","teamID":"HOU","rating":98,"potential":98},
+  {"iden":"2020-hou-03","forename":"Will","surname":"Fuller","age":26,"position":"WR","teamID":"HOU","rating":84,"potential":88},
+  {"iden":"2020-hou-04","forename":"Brandin","surname":"Cooks","age":26,"position":"WR","teamID":"HOU","rating":84,"potential":86},
+  {"iden":"2020-hou-05","forename":"Laremy","surname":"Tunsil","age":26,"position":"OL","teamID":"HOU","rating":92,"potential":94},
+  {"iden":"2020-hou-06","forename":"David","surname":"Johnson","age":28,"position":"RB","teamID":"HOU","rating":82,"potential":84},
+  // Las Vegas Raiders
+  {"iden":"2020-lv-01","forename":"Derek","surname":"Carr","age":29,"position":"QB","teamID":"LV","rating":82,"potential":84},
+  {"iden":"2020-lv-02","forename":"Josh","surname":"Jacobs","age":22,"position":"RB","teamID":"LV","rating":88,"potential":93},
+  {"iden":"2020-lv-03","forename":"Darren","surname":"Waller","age":28,"position":"TE","teamID":"LV","rating":88,"potential":90},
+  {"iden":"2020-lv-04","forename":"Rodney","surname":"Hudson","age":31,"position":"OL","teamID":"LV","rating":93,"potential":93},
+  {"iden":"2020-lv-05","forename":"Maxx","surname":"Crosby","age":23,"position":"DL","teamID":"LV","rating":82,"potential":90},
+  {"iden":"2020-lv-06","forename":"Henry","surname":"Ruggs","age":21,"position":"WR","teamID":"LV","rating":78,"potential":90},
+  {"iden":"2020-lv-07","forename":"Trent","surname":"Brown","age":27,"position":"OL","teamID":"LV","rating":87,"potential":88},
+  // Los Angeles Chargers
+  {"iden":"2020-lac-01","forename":"Keenan","surname":"Allen","age":28,"position":"WR","teamID":"LAC","rating":91,"potential":91},
+  {"iden":"2020-lac-02","forename":"Joey","surname":"Bosa","age":25,"position":"DL","teamID":"LAC","rating":94,"potential":96},
+  {"iden":"2020-lac-03","forename":"Justin","surname":"Herbert","age":22,"position":"QB","teamID":"LAC","rating":78,"potential":92},
+  {"iden":"2020-lac-04","forename":"Austin","surname":"Ekeler","age":25,"position":"RB","teamID":"LAC","rating":86,"potential":90},
+  {"iden":"2020-lac-05","forename":"Derwin","surname":"James","age":24,"position":"S","teamID":"LAC","rating":90,"potential":95},
+  {"iden":"2020-lac-06","forename":"Hunter","surname":"Henry","age":25,"position":"TE","teamID":"LAC","rating":84,"potential":88},
+  // Miami Dolphins
+  {"iden":"2020-mia-01","forename":"Tua","surname":"Tagovailoa","age":22,"position":"QB","teamID":"MIA","rating":76,"potential":90},
+  {"iden":"2020-mia-02","forename":"Xavien","surname":"Howard","age":27,"position":"CB","teamID":"MIA","rating":90,"potential":92},
+  {"iden":"2020-mia-03","forename":"DeVante","surname":"Parker","age":27,"position":"WR","teamID":"MIA","rating":84,"potential":86},
+  {"iden":"2020-mia-04","forename":"Christian","surname":"Wilkins","age":24,"position":"DL","teamID":"MIA","rating":82,"potential":88},
+  {"iden":"2020-mia-05","forename":"Mike","surname":"Gesicki","age":24,"position":"TE","teamID":"MIA","rating":82,"potential":88},
+  // New York Giants
+  {"iden":"2020-nyg-01","forename":"Saquon","surname":"Barkley","age":23,"position":"RB","teamID":"NYG","rating":91,"potential":95},
+  {"iden":"2020-nyg-02","forename":"Daniel","surname":"Jones","age":23,"position":"QB","teamID":"NYG","rating":76,"potential":86},
+  {"iden":"2020-nyg-03","forename":"Leonard","surname":"Williams","age":26,"position":"DL","teamID":"NYG","rating":86,"potential":88},
+  {"iden":"2020-nyg-04","forename":"Sterling","surname":"Shepard","age":26,"position":"WR","teamID":"NYG","rating":82,"potential":84},
+  {"iden":"2020-nyg-05","forename":"Blake","surname":"Martinez","age":26,"position":"LB","teamID":"NYG","rating":84,"potential":86},
+  // New York Jets
+  {"iden":"2020-nyj-01","forename":"Quinnen","surname":"Williams","age":22,"position":"DL","teamID":"NYJ","rating":86,"potential":94},
+  {"iden":"2020-nyj-02","forename":"Sam","surname":"Darnold","age":23,"position":"QB","teamID":"NYJ","rating":76,"potential":86},
+  {"iden":"2020-nyj-03","forename":"Le'Veon","surname":"Bell","age":28,"position":"RB","teamID":"NYJ","rating":84,"potential":85},
+  {"iden":"2020-nyj-04","forename":"Mekhi","surname":"Becton","age":21,"position":"OL","teamID":"NYJ","rating":78,"potential":90},
+  {"iden":"2020-nyj-05","forename":"Jamison","surname":"Crowder","age":27,"position":"WR","teamID":"NYJ","rating":82,"potential":84},
+  // Cincinnati Bengals
+  {"iden":"2020-cin-01","forename":"Joe","surname":"Burrow","age":23,"position":"QB","teamID":"CIN","rating":80,"potential":94},
+  {"iden":"2020-cin-02","forename":"Joe","surname":"Mixon","age":24,"position":"RB","teamID":"CIN","rating":88,"potential":91},
+  {"iden":"2020-cin-03","forename":"A.J.","surname":"Green","age":32,"position":"WR","teamID":"CIN","rating":84,"potential":84},
+  {"iden":"2020-cin-04","forename":"Tyler","surname":"Boyd","age":25,"position":"WR","teamID":"CIN","rating":86,"potential":88},
+  {"iden":"2020-cin-05","forename":"Jessie","surname":"Bates","age":23,"position":"S","teamID":"CIN","rating":86,"potential":92},
+  {"iden":"2020-cin-06","forename":"Geno","surname":"Atkins","age":32,"position":"DL","teamID":"CIN","rating":90,"potential":90},
+  // Denver Broncos
+  {"iden":"2020-den-01","forename":"Von","surname":"Miller","age":31,"position":"LB","teamID":"DEN","rating":97,"potential":97},
+  {"iden":"2020-den-02","forename":"Justin","surname":"Simmons","age":26,"position":"S","teamID":"DEN","rating":90,"potential":93},
+  {"iden":"2020-den-03","forename":"Courtland","surname":"Sutton","age":24,"position":"WR","teamID":"DEN","rating":86,"potential":90},
+  {"iden":"2020-den-04","forename":"Melvin","surname":"Gordon","age":27,"position":"RB","teamID":"DEN","rating":84,"potential":86},
+  {"iden":"2020-den-05","forename":"Drew","surname":"Lock","age":23,"position":"QB","teamID":"DEN","rating":74,"potential":86},
+  {"iden":"2020-den-06","forename":"Bradley","surname":"Chubb","age":24,"position":"LB","teamID":"DEN","rating":86,"potential":92},
+  // Detroit Lions
+  {"iden":"2020-det-01","forename":"Matthew","surname":"Stafford","age":32,"position":"QB","teamID":"DET","rating":84,"potential":86},
+  {"iden":"2020-det-02","forename":"Kenny","surname":"Golladay","age":26,"position":"WR","teamID":"DET","rating":86,"potential":88},
+  {"iden":"2020-det-03","forename":"T.J.","surname":"Hockenson","age":23,"position":"TE","teamID":"DET","rating":82,"potential":90},
+  {"iden":"2020-det-04","forename":"Trey","surname":"Flowers","age":27,"position":"DL","teamID":"DET","rating":86,"potential":88},
+  {"iden":"2020-det-05","forename":"D'Andre","surname":"Swift","age":21,"position":"RB","teamID":"DET","rating":80,"potential":90},
+  {"iden":"2020-det-06","forename":"Jeff","surname":"Okudah","age":21,"position":"CB","teamID":"DET","rating":78,"potential":92},
+  // Jacksonville Jaguars
+  {"iden":"2020-jax-01","forename":"Gardner","surname":"Minshew","age":24,"position":"QB","teamID":"JAX","rating":76,"potential":84},
+  {"iden":"2020-jax-02","forename":"DJ","surname":"Chark","age":23,"position":"WR","teamID":"JAX","rating":84,"potential":90},
+  {"iden":"2020-jax-03","forename":"Josh","surname":"Allen","age":23,"position":"LB","teamID":"JAX","rating":82,"potential":90},
+  {"iden":"2020-jax-04","forename":"Myles","surname":"Jack","age":24,"position":"LB","teamID":"JAX","rating":84,"potential":88},
+  // Washington Football Team
+  {"iden":"2020-was-01","forename":"Chase","surname":"Young","age":21,"position":"DL","teamID":"WAS","rating":82,"potential":95},
+  {"iden":"2020-was-02","forename":"Terry","surname":"McLaurin","age":24,"position":"WR","teamID":"WAS","rating":86,"potential":92},
+  {"iden":"2020-was-03","forename":"Brandon","surname":"Scherff","age":28,"position":"OL","teamID":"WAS","rating":90,"potential":91},
+  {"iden":"2020-was-04","forename":"Landon","surname":"Collins","age":26,"position":"S","teamID":"WAS","rating":84,"potential":86},
+  {"iden":"2020-was-05","forename":"Antonio","surname":"Gibson","age":22,"position":"RB","teamID":"WAS","rating":78,"potential":88},
+  {"iden":"2020-was-06","forename":"Dwayne","surname":"Haskins","age":23,"position":"QB","teamID":"WAS","rating":72,"potential":84}
+];
+
+var TEAM_ID_MAP = {
+  "KC":"Kansas City Chiefs","LAR":"Los Angeles Rams","CAR":"Carolina Panthers",
+  "NE":"New England Patriots","NO":"New Orleans Saints","SEA":"Seattle Seahawks",
+  "SF":"San Francisco 49ers","ARI":"Arizona Cardinals","ATL":"Atlanta Falcons",
+  "CHI":"Chicago Bears","BAL":"Baltimore Ravens","TEN":"Tennessee Titans",
+  "TB":"Tampa Bay Buccaneers","DAL":"Dallas Cowboys","IND":"Indianapolis Colts",
+  "GB":"Green Bay Packers","CLE":"Cleveland Browns","BUF":"Buffalo Bills",
+  "MIN":"Minnesota Vikings","PIT":"Pittsburgh Steelers","PHI":"Philadelphia Eagles",
+  "HOU":"Houston Texans","LV":"Las Vegas Raiders","LAC":"Los Angeles Chargers",
+  "MIA":"Miami Dolphins","NYG":"New York Giants","NYJ":"New York Jets",
+  "CIN":"Cincinnati Bengals","DEN":"Denver Broncos","DET":"Detroit Lions",
+  "JAX":"Jacksonville Jaguars","WAS":"Washington Commanders"
+};
+
+var FN=["Jalen","Marcus","Devin","Tyrone","Caleb","Isaiah","Mason","Elijah","Trevor","Brandon","Darius","Cole","Landon","Xavier","Jordan","Terrell","Micah","Andre","Colton","Rashad","Gavin","Dante","Tyler","Kendrick"];
+var LN=["Johnson","Williams","Carter","Brooks","Hayes","Mitchell","Jefferson","Coleman","Reed","Bennett","Foster","Powell","Sanders","Ward","Price","Hughes","Barnes","Fields","Thompson","Gaines","Dixon","Pierce","Holloway","Whitaker","Boyd","Ramsey","Lawson","Monroe"];
+var CI=["Arizona","Atlanta","Baltimore","Buffalo","Carolina","Chicago","Cincinnati","Cleveland","Dallas","Denver","Detroit","Green Bay","Houston","Indianapolis","Jacksonville","Kansas City","Las Vegas","Los Angeles","Los Angeles","Miami","Minnesota","New England","New Orleans","New York","New York","Philadelphia","Pittsburgh","San Francisco","Seattle","Tampa Bay","Tennessee","Washington"];
+var NK=["Cardinals","Falcons","Ravens","Bills","Panthers","Bears","Bengals","Browns","Cowboys","Broncos","Lions","Packers","Texans","Colts","Jaguars","Chiefs","Raiders","Chargers","Rams","Dolphins","Vikings","Patriots","Saints","Giants","Jets","Eagles","Steelers","49ers","Seahawks","Buccaneers","Titans","Commanders"];
+var POS=[["QB",3],["RB",4],["WR",6],["TE",3],["OL",9],["DL",9],["LB",7],["CB",5],["S",4],["K",1],["P",1],["LS",1]],PI={};POS.forEach(function(g,i){PI[g[0]]=i});
+var U={QB:[1,.04],RB:[.6,.3,.12,.05],WR:[1,.85,.65,.3,.1,.05],TE:[1,.4,.1],OL:[1,1,1,1,1,.4,.2,.1,.05],DL:[1,.95,.9,.8,.4,.3,.15,.1,.05],LB:[1,.95,.8,.5,.3,.15,.1],CB:[1,.95,.75,.35,.15],S:[1,.9,.45,.15],K:[1],P:[1],LS:[0]};
+var SW={QB:[3.2],RB:[.8],WR:[.7,.6,.5],TE:[.5],OL:[.7,.7,.7,.7,.7],DL:[.9,.8,.8,.7],LB:[.6,.5,.5],CB:[.7,.6,.5],S:[.6,.5],K:[.4],P:[.2]},SWS=0;
+for(var k in SW)SW[k].forEach(function(w){SWS+=w});
+var PV={QB:6,RB:0,WR:2,TE:0,OL:1,DL:2,LB:0,CB:1,S:0,K:-14,P:-16,LS:-30};
+var ST=[["py","Pass yards","pass yds"],["pt","Pass TD","pass TD"],["pi","Interceptions thrown","INT thrown"],["ry","Rush yards","rush yds"],["rt","Rush TD","rush TD"],["rc","Receptions","rec"],["rv","Receiving yards","rec yds"],["rtd","Receiving TD","rec TD"],["sk","Sacks","sacks"],["tk","Tackles","tackles"],["di","Interceptions","INT"],["fg","Field goals","FG"]];
+var TABS=[["teams","Teams"],["lead","Leaders"],["top","Top 100"],["pls","Players"],["new","Create player"],["hof","Hall of Fame"],["log","Season log"]];
+var HOFT=180,S,tab="teams",sc="s",st="py",cf="all",ed=null,sel=null,pl=null,q="";
+function rnd(a,b){return a+Math.floor(Math.random()*(b-a+1))}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function fmt(v){return(+v).toLocaleString()}
+function T(i){return CI[i]+" "+NK[i]}function Tn(i){return i>=0?NK[i]:"Retired"}
+function hf(p){return Math.round(p.av+p.t10*5+p.mvp*12+p.rg*3)}
+function fp(id){var a=S.p.concat(S.ret);for(var i=0;i<a.length;i++)if(a[i].id===id)return a[i]}
+function sline(s){return ST.filter(function(x){return s[x[0]]}).map(function(x){return fmt(s[x[0]])+" "+x[2]}).join(", ")}
+function mk(pos,d,t,rk,legendName,legendOvr,legendPot,legendAge){var age=legendAge||(rk?rnd(21,23):rnd(21,36));
+ var o=legendOvr?clamp(legendOvr+rnd(-1,1),50,99):(rk?52+rnd(0,22):clamp(Math.round(78-d*3.4+rnd(-9,9)+(age<24?-4:0)),42,96));
+ var name=legendName||(FN[rnd(0,FN.length-1)]+" "+LN[rnd(0,LN.length-1)]);
+ var pot=legendPot||clamp(o+(rk?rnd(2,16):age<27?rnd(0,10):0),o,99);
+ return{id:S.nid++,n:name,pos:pos,age:age,ovr:o,pot:pot,t:t,s:{},c:{},L:[],av:0,t10:0,mvp:0,rg:0}}
+
+function fresh(){
+ S={season:2020,nid:1,p:[],ret:[],hof:[],tm:[],top:[],log:[],champ:"",rec:{},played:0,prev:{}};
+ for(var t=0;t<32;t++) S.tm.push({w:0,l:0,c:0});
+
+ ROSTER_2020.forEach(function(lp){
+   var fullTeamName = TEAM_ID_MAP[lp.teamID] || "Kansas City Chiefs";
+   var teamIndex = 0;
+   for(var i=0; i<CI.length; i++){
+     if((CI[i]+" "+NK[i]) === fullTeamName || NK[i] === fullTeamName.split(" ").pop()){ teamIndex = i; break; }
+   }
+   var p = mk(lp.position, 0, teamIndex, false, lp.forename+" "+lp.surname, lp.rating, lp.potential, lp.age);
+   S.p.push(p);
+ });
+
+ for(var t=0; t<32; t++){
+   var curCnt={};
+   S.p.filter(function(p){return p.t===t}).forEach(function(p){curCnt[p.pos]=(curCnt[p.pos]||0)+1});
+   POS.forEach(function(g){
+     var need = g[1]-(curCnt[g[0]]||0);
+     for(var i=0; i<need; i++) S.p.push(mk(g[0], i, t));
+   });
+ }
+}
+
+function load(){try{var r=localStorage.getItem("gdyn_2020_longevity");if(r){S=JSON.parse(r);if(S&&S.p)return}}catch(e){}fresh()}
+function save(){try{localStorage.setItem("gdyn_2020_longevity",JSON.stringify(S))}catch(e){}}
+
+function gstat(p,u){var f=p.ovr/80,g=f*f,s={};function z(x){return Math.round(x*u*(.8+Math.random()*.4))}function h(x){return Math.round(x*u*(.7+Math.random()*.6)*2)/2}
+ switch(p.pos){case"QB":s.py=z(4300*g);s.pt=z(29*g);s.pi=z(12/g);s.ry=z(260*f);s.rt=z(3.5*g);break;
+ case"RB":s.ry=z(1700*g);s.rt=z(13*g);s.rc=z(35*f);s.rv=z(260*f);s.rtd=z(1.5*f);break;
+ case"WR":s.rc=z(85*f);s.rv=z(1150*g);s.rtd=z(8*g);break;
+ case"TE":s.rc=z(62*f);s.rv=z(720*g);s.rtd=z(5.5*g);break;
+ case"DL":case"DE":case"DT":s.sk=h(10*g);s.tk=z(48*f);break;
+ case"LB":case"MLB":case"OLB":s.tk=z(115*f);s.sk=h(5*g);s.di=z(1.6*f);break;
+ case"CB":s.di=z(3.8*g);s.tk=z(58*f);break;
+ case"S":s.di=z(3.2*g);s.tk=z(78*f);break;
+ case"K":s.fg=z(30*g)}
+ return s}
+function avf(p,s,u){var x=0;switch(p.pos){case"QB":x=s.py/400+s.pt*.6-s.pi*.5+s.ry/200;break;case"RB":x=s.ry/150+s.rt*.6+s.rv/150;break;case"WR":case"TE":x=s.rv/100+s.rtd*.6;break;case"DL":case"DE":case"DT":x=s.sk*1.2+s.tk/25;break;case"LB":case"MLB":case"OLB":x=s.tk/18+s.sk+s.di*2;break;case"CB":x=s.di*2.5+s.tk/20;break;case"S":x=s.di*2.5+s.tk/22;break;case"K":x=s.fg/3;break;case"P":x=5*u;break;case"OL":case"OT":case"OG":case"C":x=u*(p.ovr-45)/4.5}return Math.max(0,x)}
+function win(a,b,str){return Math.random()<1/(1+Math.exp((str[b]-str[a])/3))}
+
+function play(){
+ var N=32,by=[],str=[],i,g,k,pos,yr=S.season;
+ for(i=0;i<N;i++){by.push({});S.tm[i]={w:0,l:0,c:0}}
+ S.p.forEach(function(p){(by[p.t][p.pos]=by[p.t][p.pos]||[]).push(p)});
+ for(i=0;i<N;i++){var tot=0;for(pos in by[i])by[i][pos].sort(function(a,b){return b.ovr-a.ovr});
+  for(pos in SW)SW[pos].forEach(function(w,j){var x=by[i][pos]&&by[i][pos][j];tot+=w*(x?x.ovr:40)});str[i]=tot/SWS}
+ for(g=0;g<17;g++){var o=[];for(i=0;i<N;i++)o.push(i);o.sort(function(){return Math.random()-.5});
+  for(k=0;k<N;k+=2){var a=o[k],b=o[k+1],aw=win(a,b,str);S.tm[aw?a:b].w++;S.tm[aw?b:a].l++}}
+ var sd=[],rk={};for(i=0;i<N;i++)sd.push(i);sd.sort(function(a,b){return S.tm[b].w-S.tm[a].w||str[b]-str[a]});
+ sd.forEach(function(t,j){rk[t]=j;S.tm[t].po=j<16});
+ var f=sd.slice(0,16);while(f.length>1){var nx=[],n=f.length;for(k=0;k<n/2;k++){var a=f[k],b=f[n-1-k];nx.push(win(a,b,str)?a:b)}f=nx.sort(function(a,b){return rk[a]-rk[b]})}
+ var ch=f[0];S.tm[ch].c=1;
+ var all=[];
+ for(i=0;i<N;i++)for(pos in by[i])by[i][pos].forEach(function(p,d){var u=(U[p.pos]||[])[d]||0,s=gstat(p,u),a=avf(p,s,u);p.s=s;for(var key in s)p.c[key]=(p.c[key]||0)+s[key];p.av+=a;if(p.t===ch)p.rg++;p.L.push({y:yr,t:p.t,o:p.ovr,s:s,a:Math.round(a)});p.sc=p.ovr+(PV[p.pos]||0)+Math.min(8,a/3);all.push(p)});
+ all.sort(function(a,b){return b.sc-a.sc});
+ var np={};all.slice(0,100).forEach(function(p,j){np[p.id]=j+1;if(j<10)p.t10++;if(j===0)p.mvp++});
+ S.top=all.slice(0,100).map(function(p){return{id:p.id,n:p.n,pos:p.pos,t:p.t,age:p.age,o:p.ovr,sc:Math.round(p.sc*10)/10,pv:S.prev[p.id]||0}});S.prev=np;
+ ST.forEach(function(x){var kk=x[0],c=S.p.filter(function(p){return p.s[kk]>0}).sort(function(a,b){return b.s[kk]-a.s[kk]}).slice(0,10).map(function(p){return{n:p.n,pos:p.pos,t:p.t,y:yr,v:p.s[kk]}});S.rec[kk]=(S.rec[kk]||[]).concat(c).sort(function(a,b){return b.v-a.v}).slice(0,10)});
+ var lines=[],hofs=[],nret=0,keep=[],best=all[0];
+
+ // Slower regression & retirement at age 38 or older
+ S.p.forEach(function(p){
+  var a=p.age, d=0;
+  if(a<=26) {
+    d = rnd(0, 1 + Math.ceil((p.pot - p.ovr) / 4));
+  } else if(a<=31) {
+    d = Math.random() < 0.15 ? -1 : 0; // Prime extended to 31 with minimal regression
+  } else if(a<=35) {
+    d = Math.random() < 0.45 ? -1 : 0; // Very gradual decline from 32-35
+  } else {
+    d = -rnd(0, 2); // Slower late-career regression at 36+
+  }
+  p.ovr = clamp(p.ovr + d, 35, d > 0 ? Math.max(p.pot, p.ovr) : 99);
+  p.age = a + 1;
+  a = p.age;
+
+  // Players can only retire at age 38 or older
+  var c = a >= 44 ? 1 : a === 43 ? 0.75 : a === 42 ? 0.55 : a === 41 ? 0.40 : a === 40 ? 0.25 : a === 39 ? 0.15 : a === 38 ? 0.08 : 0;
+  if(Math.random() < c){
+    nret++; p.ry=yr; p.lt=p.t; p.t=-1;
+    var ind = hf(p) >= HOFT && !p.inh;
+    if(ind){ p.inh=1; S.hof.push(p); hofs.push(esc(p.n)); }
+    S.ret.push(p);
+    if((p.ovr >= 72 || ind) && lines.length < 25) {
+      lines.push(esc(p.n)+" ("+p.pos+", "+NK[p.lt]+") retired at "+a+(ind?' <span class="up">and was inducted into the Hall of Fame</span>':"")+".");
+    }
+  } else {
+    keep.push(p);
+  }
+ });
+ S.p=keep;
+
+ var cnt={},nr=0;S.p.forEach(function(p){cnt[p.t+p.pos]=(cnt[p.t+p.pos]||0)+1});
+ for(i=0;i<N;i++)POS.forEach(function(g){for(var j=cnt[i+g[0]]||0;j<g[1];j++){S.p.push(mk(g[0],j,i,1));nr++}});
+ S.log.unshift({y:yr,ch:T(ch),rec:S.tm[ch].w+"-"+S.tm[ch].l,mvp:best.n+" ("+best.pos+","+NK[best.t]+")",lines:lines,hofs:hofs,nret:nret,nr:nr});
+ S.champ=NK[ch];S.played=yr;S.season++;save();render()}
+
+function tbl(h,r){return'<div class="scroll"><table><tr>'+h.map(function(x){return'<th>'+x+'</th>'}).join('')+'</tr>'+r.map(function(x){return'<tr>'+x.map(function(c){return'<td>'+c+'</td>'}).join('')+'</tr>'}).join('')+'</table></div>'}
+function btn(a,v,t){return'<button class="lnk" data-a="'+a+'" data-v="'+v+'">'+t+'</button>'}
+function pbtn(p){return btn('pl',p.id,esc(p.n))}
+function chips(list,cur,a){return'<div style="margin-bottom:12px;display:flex;gap:6px;flex-wrap:wrap">'+list.map(function(x){return'<button class="btn'+(cur===x[0]?'':' alt')+'" data-a="'+a+'" data-v="'+x[0]+'">'+x[1]+'</button>'}).join('')+'</div>'}
+
+function teamsV(){
+ if(sel===null){var o=S.tm.map(function(x,i){return i}).sort(function(a,b){return S.tm[b].w-S.tm[a].w});
+  return(S.played?'<p class="mu">Season '+S.played+' standings. Click a team to inspect its players.</p>':'<p class="mu">2020 realistic roster active (Retirements 38+, Slower Regression). Click a team to inspect players.</p>')+
+  tbl(['Team','W','L','Result'],o.map(function(i){var x=S.tm[i];return[btn('team',i,T(i)),x.w,x.l,x.c?'<b>Champion</b>':x.po?'Playoffs':'']}))}
+ var ros=S.p.filter(function(p){return p.t===sel}).sort(function(a,b){return (PI[a.pos]||0)-(PI[b.pos]||0)||b.ovr-a.ovr});
+ return'<p>'+btn('back','','← All teams')+'</p><h3>'+T(sel)+' ('+ros.length+' players)</h3>'+tbl(['Pos','Name','Age','Rating','Potential','Last season'],ros.map(function(p){return[p.pos,pbtn(p),p.age,p.ovr,p.pot,sline(p.s)]}))}
+
+function leadV(){
+ var h=chips([["s","This season"],["c","Career (all-time)"],["r","Single-season records"]],sc,"sc")+(sc==="c"?chips([["all","All players"],["act","Active only"],["ret","Retired only"]],cf,"cf"):"")+chips(ST.map(function(x){return[x[0],x[1]]}),st,"st"),lab=ST.filter(function(x){return x[0]===st})[0][1],hd,rows;
+ if(sc==="r"){hd=["#","Player","Pos","Year","Team",lab];rows=(S.rec[st]||[]).map(function(r,i){return[i+1,esc(r.n),r.pos,"Season "+r.y,Tn(r.t),fmt(r.v)]})}
+ else if(sc==="s"){hd=["#","Player","Pos","Team","Age",lab];rows=S.p.filter(function(p){return p.s[st]>0}).sort(function(a,b){return b.s[st]-a.s[st]}).slice(0,15).map(function(p,i){return[i+1,pbtn(p),p.pos,Tn(p.t),p.age,fmt(p.s[st])]})}
+ else{hd=["#","Player","Pos","Status","Age",lab+" (career)"];rows=(cf==="act"?S.p:cf==="ret"?S.ret:S.p.concat(S.ret)).filter(function(p){return p.c[st]>0}).sort(function(a,b){return b.c[st]-a.c[st]}).slice(0,15).map(function(p,i){return[i+1,pbtn(p),p.pos,p.t>=0?Tn(p.t):p.inh?"Hall of Fame":"Retired",p.age,fmt(p.c[st])]})}
+ return h+(rows.length?tbl(hd,rows):'<div class="empty">Play a season to see stats.</div>')}
+
+function topV(){if(!S.top.length)return'<div class="empty">Play a season to see the top 100 players.</div>';
+ return'<p class="mu">Rank is unified rating plus position value plus simulation performance.</p>'+tbl(["#","Player","Pos","Team","Age","Rating","Score","Move"],S.top.map(function(p,i){var m=S.played<2?"—":p.pv?(p.pv>i+1?'<span class="up">▲'+(p.pv-i-1)+'</span>':p.pv<i+1?'<span class="dn">▼'+(i+1-p.pv)+'</span>':"—"):"New";return[i+1,btn("pl",p.id,esc(p.n)),p.pos,Tn(p.t),p.age,p.o,p.sc,m]}))}
+
+function res(){var s=q.toLowerCase().trim(),l=S.p.concat(S.ret).filter(function(p){return!s||(p.n+" "+p.pos+" "+(p.t>=0?T(p.t):"retired")).toLowerCase().indexOf(s)>=0}).sort(function(a,b){return b.ovr-a.ovr}).slice(0,30);
+ return tbl(["Name","Pos","Team","Age","Rating","Career AV"],l.map(function(p){return[pbtn(p),p.pos,p.t>=0?Tn(p.t):"Retired",p.age,p.ovr,Math.round(p.av)]}))}
+function plsV(){return'<input id="q" placeholder="Search by name, position or team" value="'+esc(q)+'" style="width:100%;margin-bottom:12px"><div id="res">'+res()+'</div>'}
+
+function plV(){var p=fp(pl);if(!p)return"";
+ return'<p>'+btn("back","","← Back")+' '+btn("edit",p.id,"Edit player")+'</p><h3>'+esc(p.n)+", "+p.pos+'</h3><p class="mu">'+(p.t>=0?T(p.t):p.inh?"Retired, Hall of Fame":"Retired")+", age "+p.age+", rating "+p.ovr+", Hall of Fame points "+hf(p)+'</p><p><b>Career:</b> '+(sline(p.c)||"No stats yet")+'</p>'+(p.L.length?tbl(["Season","Team","Rating","AV","Stats"],p.L.slice().reverse().map(function(l){return["Season "+l.y,Tn(l.t),l.o,l.a,sline(l.s)]})):'<div class="empty">No seasons played yet.</div>')}
+
+function hofV(){var ap=S.p.concat(S.ret).map(function(p){return[p,hf(p)]}).filter(function(r){return r[1]>0}).sort(function(a,b){return b[1]-a[1]}).slice(0,15);
+ return'<p class="mu">Retired players enter the Hall of Fame with '+HOFT+' points: career approximate value, plus 5 per top-10 season, 12 per #1 season and 3 per championship.</p>'+
+ (S.hof.length?'<h3>Inductees</h3>'+tbl(["Name","Pos","Class","Seasons","Career AV","Top 10s","#1 seasons","Rings","Points"],S.hof.slice().reverse().map(function(p){return[pbtn(p),p.pos,"Season "+p.ry,p.L.length,Math.round(p.av),p.t10,p.mvp,p.rg,hf(p)]})):'<div class="empty">No inductees yet. Players retire starting at age 38.</div>')+
+ '<h3>Hall of Fame points leaders</h3>'+(ap.length?tbl(["#","Player","Pos","Status","Points"],ap.map(function(r,i){var p=r[0];return[i+1,pbtn(p),p.pos,p.t>=0?Tn(p.t):p.inh?"Hall of Fame":"Retired",r[1]]})):'<div class="empty">No points yet.</div>')}
+
+function logV(){return S.log.length?S.log.map(function(e){return'<h3>Season '+e.y+'</h3><p><b>Champion:</b> '+e.ch+' ('+e.rec+'). <b>Best player:</b> '+esc(e.mvp)+'.</p><p class="mu">'+e.nret+' players retired (38+) and '+e.nr+' rookies joined.'+(e.hofs.length?' Hall of Fame class: '+e.hofs.join(", ")+'.':'')+'</p><ul>'+e.lines.map(function(l){return'<li>'+l+'</li>'}).join('')+'</ul>'}).join(''):'<div class="empty">Play a season to start the history book.</div>'}
+
+function formV(p){var n=p?p.n:"",pos=p?p.pos:"QB",age=p?p.age:22,o=p?p.ovr:65,pt=p?p.pot:75,t=p?p.t:0,np=!p;
+ function opt(v,l,s2){return'<option value="'+v+'"'+(s2?' selected':'')+'>'+l+'</option>'}
+ function fld(l,c){return'<label style="display:flex;flex-direction:column;font-size:13px;color:var(--mu);gap:4px">'+l+c+'</label>'}
+ return'<h3>'+(np?'Create player':'Edit '+esc(p.n))+'</h3><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px">'+
+ fld('Name','<input id="fn" value="'+esc(n)+'" maxlength="40">')+
+ fld('Position','<select id="fp">'+POS.map(function(g){return opt(g[0],g[0],g[0]===pos)}).join('')+'</select>')+
+ (np||t>=0?fld('Team','<select id="ft">'+CI.map(function(c,i){return opt(i,T(i),i===t)}).join('')+'</select>'):'')+
+ fld('Age','<input id="fa" type="number" min="18" max="45" value="'+age+'">')+
+ fld('Rating','<input id="fo" type="number" min="35" max="99" value="'+o+'">')+
+ fld('Potential','<input id="fq" type="number" min="35" max="99" value="'+pt+'">')+
+ '</div><p style="margin-top:16px"><button class="btn go" data-a="savep">'+(np?'Create and sign player':'Save changes')+'</button>'+(np?'':'<button class="btn alt" data-a="cancel">Cancel</button>')+'</p>'}
+
+function savep(){var g=function(i){return document.getElementById(i)},p=ed==="new"?null:fp(ed),o=clamp(+g("fo").value||60,35,99);
+ if(!p){p=mk(g("fp").value,0,+g("ft").value);S.p.push(p)}
+ p.n=g("fn").value.trim()||"Player";p.pos=g("fp").value;p.age=clamp(+g("fa").value||25,18,45);p.ovr=o;p.pot=clamp(Math.max(+g("fq").value||o,o),o,99);
+ if(p.t>=0&&g("ft"))p.t=+g("ft").value;
+ pl=p.id;ed=null;save();render()}
+
+function render(){
+ document.getElementById("a").textContent=S.season;document.getElementById("b").textContent=fmt(S.p.length);document.getElementById("c").textContent=S.champ||"—";document.getElementById("d").textContent=S.hof.length;
+ document.getElementById("play").textContent="Play season "+S.season;
+ document.getElementById("nav").innerHTML=TABS.map(function(t){return'<button data-t="'+t[0]+'" aria-selected="'+(t[0]===tab&&pl===null)+'">'+t[1]+'</button>'}).join("");
+ document.getElementById("view").innerHTML=pl!==null?(ed===pl?formV(fp(pl)):plV()):({teams:teamsV,lead:leadV,top:topV,pls:plsV,"new":function(){return formV(null)},hof:hofV,log:logV})[tab]()}
+
+document.getElementById("themeToggle").addEventListener("click",function(){
+ var html=document.documentElement;
+ var cur=html.getAttribute("data-theme");
+ var next=cur==="light"?"dark":"light";
+ html.setAttribute("data-theme",next);
+ try{localStorage.setItem("gdyn_2020_theme",next)}catch(e){}
+});
+try{var savedTheme=localStorage.getItem("gdyn_2020_theme");if(savedTheme){document.documentElement.setAttribute("data-theme",savedTheme)}}catch(e){}
+
+document.addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;var a=b.dataset.a,v=b.dataset.v;
+ if(b.dataset.t){tab=b.dataset.t;pl=null;ed=tab==="new"?"new":null;if(tab==="teams")sel=null;render();return}
+ if(b.id==="reset"){if(b.dataset.armed){fresh();tab="teams";sel=null;pl=null;save();render();b.textContent="Reset league";delete b.dataset.armed}else{b.dataset.armed="1";b.textContent="Click again to erase everything";setTimeout(function(){b.textContent="Reset league";delete b.dataset.armed},4000)}return}
+ if(a==="play")play();else if(a==="team"){sel=+v;render()}else if(a==="back"){if(pl!==null){pl=null;ed=null}else sel=null;render()}
+ else if(a==="pl"){pl=+v;render()}else if(a==="sc"){sc=v;render()}else if(a==="st"){st=v;render()}else if(a==="cf"){cf=v;render()}else if(a==="edit"){pl=+v;ed=+v;render()}else if(a==="cancel"){ed=null;render()}else if(a==="savep")savep()});
+
+document.addEventListener("input",function(e){if(e.target.id==="q"){q=e.target.value;var resEl=document.getElementById("res");if(resEl)resEl.innerHTML=res()}});
+load();render();
+})();
+</script>
+</body>
+</html>
